@@ -65,6 +65,28 @@
     } catch (_) { /* Unconfirmed or invalid profiles stay hidden. */ }
   }
 
+  const gallery = document.getElementById("gallery-dialog");
+  let previousFocus;
+  document.querySelectorAll("[data-gallery]").forEach(link => {
+    link.addEventListener("click", event => {
+      if (!gallery || typeof gallery.showModal !== "function") return;
+      event.preventDefault();
+      previousFocus = link;
+      document.getElementById("gallery-title").textContent = link.dataset.title;
+      const image = document.getElementById("gallery-image");
+      image.src = link.href; image.alt = link.dataset.title + " project screenshot";
+      document.getElementById("gallery-description").textContent = link.dataset.description;
+      document.getElementById("gallery-original").href = link.href;
+      gallery.showModal(); document.body.classList.add("gallery-open");
+      document.getElementById("gallery-close").focus();
+    });
+  });
+  document.getElementById("gallery-close").addEventListener("click", () => gallery.close());
+  gallery.addEventListener("click", event => { if (event.target === gallery) {
+    const rect = gallery.getBoundingClientRect();
+    if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) gallery.close();
+  }});
+  gallery.addEventListener("close", () => { document.body.classList.remove("gallery-open"); if (previousFocus) previousFocus.focus(); });
   let brief = "";
   const form = document.getElementById("project-form");
   const result = document.getElementById("brief-result");
