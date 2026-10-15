@@ -95,7 +95,32 @@
   if (email) {
     document.getElementById("form-hint").textContent = "Prepare your brief, then open an email draft to send it. Nothing is sent automatically.";
   }
+  const endpoint = typeof config.enquiryEndpoint === "string" && /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(config.enquiryEndpoint) ? config.enquiryEndpoint : "";
+  if (endpoint) {
+    form.action = endpoint;
+    form.method = "post";
+    document.getElementById("brief-button").textContent = "Send enquiry";
+    form.querySelector("h3").textContent = "Tell me about your project.";
+    document.getElementById("form-hint").textContent = "Your details will be saved so I can respond to your enquiry. A confirmation page opens after submission.";
+    const requestId = document.createElement("input");
+    requestId.type = "hidden"; requestId.name = "request_id";
+    requestId.value = crypto.randomUUID(); form.appendChild(requestId);
+    const trap = document.createElement("input");
+    trap.type = "text"; trap.name = "company_website"; trap.tabIndex = -1;
+    trap.autocomplete = "off"; trap.setAttribute("aria-hidden", "true");
+    trap.style.cssText = "position:absolute;left:-10000px;width:1px;height:1px";
+    form.appendChild(trap);
+  }
   form.addEventListener("submit", event => {
+    if (endpoint) {
+      if (!form.reportValidity()) { event.preventDefault(); return; }
+      const button = document.getElementById("brief-button");
+      button.disabled = true; button.textContent = "Sending…";
+      // Native POST allows the server to show a receipt only after saving.
+      // No opaque no-cors fetch response is treated as a successful submission.
+      window.setTimeout(() => { button.disabled = false; button.textContent = "Send enquiry"; }, 15000);
+      return;
+    }
     event.preventDefault();
     if (!form.reportValidity()) return;
     const values = new FormData(form);
